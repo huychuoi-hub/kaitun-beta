@@ -1,74 +1,99 @@
-local LMG2L = {}
+-- Khởi tạo biến cơ bản
 local Player = game:GetService("Players").LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
 
--- Khởi tạo UI
-local ScreenGui = Instance.new("ScreenGui", Player:WaitForChild("PlayerGui"))
+-- Xóa UI cũ nếu đã chạy trước đó để không bị đè lên nhau
+if PlayerGui:FindFirstChild("ChuoiRayHub_UI") then
+    PlayerGui:FindFirstChild("ChuoiRayHub_UI"):Destroy()
+end
+
+-- TẠO GIAO DIỆN (UI) - Dựa trên mẫu bạn gửi
+local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "ChuoiRayHub_UI"
+ScreenGui.Parent = PlayerGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.BorderSizePixel = 0
+MainFrame.Name = "MainFrame"
 MainFrame.BackgroundColor3 = Color3.fromRGB(243, 222, 255)
-MainFrame.Size = UDim2.new(0, 380, 0, 224)
-MainFrame.Position = UDim2.new(0, 174, 0, 4)
 MainFrame.BackgroundTransparency = 0.49
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.5, -190, 0.2, 0) -- Căn giữa màn hình cho dễ nhìn
+MainFrame.Size = UDim2.new(0, 380, 0, 224)
 Instance.new("UICorner", MainFrame)
-local MainStroke = Instance.new("UIStroke", MainFrame)
-MainStroke.Thickness = 2
 
--- Text hiển thị Level
+local Stroke = Instance.new("UIStroke", MainFrame)
+Stroke.Thickness = 2
+
+-- Hiển thị Level
 local LevelLabel = Instance.new("TextLabel", MainFrame)
-LevelLabel.Size = UDim2.new(0, 76, 0, 34)
-LevelLabel.Position = UDim2.new(0, 8, 0, 2)
 LevelLabel.BackgroundTransparency = 1
+LevelLabel.Position = UDim2.new(0, 8, 0, 2)
+LevelLabel.Size = UDim2.new(0, 150, 0, 34)
+LevelLabel.Font = Enum.Font.SourceSansBold
 LevelLabel.TextColor3 = Color3.fromRGB(35, 0, 0)
-LevelLabel.TextSize = 12
-LevelLabel.Text = "LEVEL: " .. (Player.Data:FindFirstChild("Level") and Player.Data.Level.Value or "0")
+LevelLabel.TextSize = 16
+LevelLabel.TextXAlignment = Enum.TextXAlignment.Left
+LevelLabel.Text = "LEVEL: Đang tải..."
 
--- Text hiển thị Tên
+-- Hiển thị Tên người chơi
 local NameLabel = Instance.new("TextLabel", MainFrame)
-NameLabel.Size = UDim2.new(0, 150, 0, 34)
-NameLabel.Position = UDim2.new(0, 230, 0, 2)
 NameLabel.BackgroundTransparency = 1
+NameLabel.Position = UDim2.new(0, 220, 0, 2)
+NameLabel.Size = UDim2.new(0, 150, 0, 34)
+NameLabel.Font = Enum.Font.SourceSansBold
+NameLabel.TextColor3 = Color3.fromRGB(35, 0, 0)
 NameLabel.TextSize = 14
+NameLabel.TextXAlignment = Enum.TextXAlignment.Right
 NameLabel.Text = "Name: " .. Player.Name
 
--- Text Hub
-local HubLabel = Instance.new("TextLabel", MainFrame)
-HubLabel.Size = UDim2.new(0, 108, 0, 54)
-HubLabel.Position = UDim2.new(0, 136, 0, 72)
-HubLabel.BackgroundTransparency = 1
-HubLabel.TextSize = 16
-HubLabel.Text = "chuoirayhub kaitun"
+-- Tiêu đề Hub
+local HubTitle = Instance.new("TextLabel", MainFrame)
+HubTitle.BackgroundTransparency = 1
+HubTitle.Position = UDim2.new(0, 0, 0, 70)
+HubTitle.Size = UDim2.new(1, 0, 0, 30)
+HubTitle.Font = Enum.Font.SourceSansItalic
+HubTitle.TextSize = 18
+HubTitle.Text = "chuoirayhub kaitun"
 
--- Text Thông báo (Beta / Status)
+-- Label thông báo (Phần quan trọng nhất)
 local StatusLabel = Instance.new("TextLabel", MainFrame)
-StatusLabel.Size = UDim2.new(0, 380, 0, 50)
-StatusLabel.Position = UDim2.new(0, 0, 0, 130)
 StatusLabel.BackgroundTransparency = 1
+StatusLabel.Position = UDim2.new(0, 0, 0, 120)
+StatusLabel.Size = UDim2.new(1, 0, 0, 50)
+StatusLabel.Font = Enum.Font.SourceSansBold
 StatusLabel.TextSize = 15
-StatusLabel.Text = "Đang kiểm tra..."
+StatusLabel.Text = "Đang khởi tạo..."
 
---- LOGIC HOẠT ĐỘNG ---
+-- Cập nhật Level liên tục
+task.spawn(function()
+    while true do
+        pcall(function()
+            local lv = Player.Data:FindFirstChild("Level") and Player.Data.Level.Value or 0
+            LevelLabel.Text = "LEVEL: " .. tostring(lv)
+        end)
+        task.wait(1)
+    end
+end)
 
+--- LOGIC CHỜ 7 GIÂY VÀ CHẠY AUTO LEVEL ---
 task.spawn(function()
     -- 5 giây đầu: Báo lỗi Beta
     StatusLabel.Text = "script đang ở beta nên hơi lỗi thông cảm"
     task.wait(5)
     
-    -- 2 giây tiếp theo: Chuẩn bị
-    StatusLabel.Text = "Đang khởi động Auto Level..."
+    -- 2 giây sau: Chuẩn bị
+    StatusLabel.Text = "Đang chuẩn bị farm..."
     task.wait(2)
     
-    -- Xong 7 giây: Bắt đầu Farm
-    StatusLabel.Text = "Status: Đang chạy Auto Level!"
-    
+    StatusLabel.Text = "Trạng thái: Đang chạy Auto Level!"
+
     -------------------------------------------------------
-    -- DÁN CODE AUTOLEVEL CỦA BẠN VÀO ĐÂY --
+    -- DÁN CODE AUTOLEVEL CỦA BẠN VÀO DƯỚI ĐÂY --
     -------------------------------------------------------
-    print("Bat dau farm tai day...")
+    print("Code Farm đã được kích hoạt!")
     
-  L_1_[22] = (L_1_[5]:WaitForChild("Data")):WaitForChild("Level")
+L_1_[22] = (L_1_[5]:WaitForChild("Data")):WaitForChild("Level")
 function CheckLevel2()
 	local L_28_ = {}
 	L_28_[2] = (game:GetService("Players"))["LocalPlayer"]["Data"]["Level"]["Value"]
@@ -1765,12 +1790,4 @@ L_1_[8] = function()
 		EnemyPos = CFrame["new"](-16778.7852, 232.283752, 1442.08325, -0.992449045, -5.54140511e-10, -0.12265785, -2.84580609e-10, 1, -2.21517649e-09, .12265785, -2.16354379e-09, -0.992449045)
 	end
 end
-
--- Cập nhật Level liên tục
-task.spawn(function()
-    while task.wait(2) do
-        if Player.Data:FindFirstChild("Level") then
-            LevelLabel.Text = "LEVEL: " .. tostring(Player.Data.Level.Value)
-        end
-    end
 end)
